@@ -1,6 +1,7 @@
 package u04lab
 import u03.Sequences.* 
 import Sequence.*
+import u04.monads.Optionals.Optional
 
 /*  Exercise 5: 
  *  - Generalise by ad-hoc polymorphism logAll, such that:
@@ -23,4 +24,24 @@ object Ex5Traversable:
     case Cons(h, t) => log(h); logAll(t)
     case _ => ()
 
+  trait Traversable[T[_]]:
+    extension [A](t: T[A]) def applyAll(f: A => Unit): Unit
   
+  given Traversable[Sequence] with
+   extension [A](t: Sequence[A]) def applyAll(f: A => Unit) = t match
+    case Cons(h, t) => f(h); t.applyAll(f)
+    case _ =>
+
+  given Traversable[Optional] with
+    extension [A](t: Optional[A]) def applyAll(f: A => Unit) = t match
+      case Optional.Just(a) => f(a)
+      case _ => 
+  
+  @main def tryTraversable =
+    val seq = Cons(10, Cons(20, Cons(30, Nil())))
+    val just = Optional.Just(10)
+    val empty = Optional.Empty()
+    seq.applyAll(log) //The next element is: 10, ... 20, ... 30
+    just.applyAll(log) //The next element is: 10
+    empty.applyAll(log)
+    seq.applyAll(println(_))
